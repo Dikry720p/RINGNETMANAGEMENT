@@ -6,6 +6,7 @@ use App\Http\Controllers\PackageController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PackageImportController;
 use App\Http\Controllers\CustomerImportController;
+use App\Http\Controllers\MonthlyBillController;
 
 Route::middleware('auth')->group(function () {
     Route::resource('customers', CustomerController::class)
@@ -30,6 +31,11 @@ Route::middleware('auth')->group(function () {
         ->name('packages.import');
     Route::post('/customers/import', [CustomerImportController::class, 'store'])
         ->name('customers.import');
+    Route::get('/monthly-bills', [MonthlyBillController::class, 'index'])
+        ->name('monthly-bills.index');
+
+    Route::post('/monthly-bills/generate', [MonthlyBillController::class, 'generate'])
+        ->name('monthly-bills.generate');
 });
 
 require __DIR__ . '/auth.php';

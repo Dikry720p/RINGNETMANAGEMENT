@@ -54,7 +54,10 @@
                         <a href="{{ route('packages.index') }}" class="block px-4 py-3 rounded-lg hover:bg-slate-800">
                             Jenis Paket
                         </a>
-                        <a href="#" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Pembayaran Bulanan</a>
+                        <a href="{{ route('monthly-bills.index') }}"
+                            class="block px-4 py-3 rounded-lg hover:bg-slate-800">
+                            Pembayaran Bulanan
+                        </a>
                         <a href="#" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Perlu Dipanggil</a>
                         <a href="#" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Bermasalah</a>
                         <a href="#" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Rekap Pendapatan</a>
