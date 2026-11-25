@@ -22,9 +22,25 @@ class MonthlyBillController extends Controller
             $year = now()->year;
         }
 
+        $search = trim($request->input('search', ''));
+        $status = $request->input('status', '');
+
+        if (!in_array($status, ['', 'UNPAID', 'PAID'])) {
+            $status = '';
+        }
+
         $bills = MonthlyBill::with('customer')
             ->where('billing_month', $month)
             ->where('billing_year', $year)
+            ->when($search !== '', function ($query) use ($search) {
+                $query->whereHas('customer', function ($customerQuery) use ($search) {
+                    $customerQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('user_name', 'like', "%{$search}%");
+                });
+            })
+            ->when($status !== '', function ($query) use ($status) {
+                $query->where('status', $status);
+            })
             ->orderBy('status')
             ->orderBy('id', 'desc')
             ->paginate(20)
@@ -50,7 +66,9 @@ class MonthlyBillController extends Controller
             'year',
             'totalBills',
             'totalUnpaid',
-            'totalPaid'
+            'totalPaid',
+            'search',
+            'status'
         ));
     }
 

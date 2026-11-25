@@ -25,44 +25,83 @@
         @endif
 
         {{-- Filter Periode & Generate --}}
+
+        {{-- Filter Periode & Generate --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <form action="{{ route('monthly-bills.index') }}" method="GET" class="flex flex-wrap items-end gap-4">
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Bulan
-                    </label>
-                    <select name="month" class="rounded-lg border-gray-300 shadow-sm w-44">
-                        @foreach (range(1, 12) as $m)
-                            <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                            </option>
-                        @endforeach
-                    </select>
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+
+                {{-- Navigasi Periode --}}
+                @php
+                    $currentPeriod = \Carbon\Carbon::createFromDate($year, $month, 1);
+                    $previousPeriod = $currentPeriod->copy()->subMonth();
+                    $nextPeriod = $currentPeriod->copy()->addMonth();
+                @endphp
+
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('monthly-bills.index', ['month' => $previousPeriod->month, 'year' => $previousPeriod->year]) }}"
+                        class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+                        title="Bulan sebelumnya">
+                        &larr;
+                    </a>
+
+                    <div class="text-center min-w-[150px]">
+                        <p class="text-xs text-gray-500">Periode Tagihan</p>
+                        <h3 class="text-lg font-bold text-gray-800">
+                            {{ $currentPeriod->translatedFormat('F Y') }}
+                        </h3>
+                    </div>
+
+                    <a href="{{ route('monthly-bills.index', ['month' => $nextPeriod->month, 'year' => $nextPeriod->year]) }}"
+                        class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+                        title="Bulan berikutnya">
+                        &rarr;
+                    </a>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Tahun
-                    </label>
-                    <select name="year" class="rounded-lg border-gray-300 shadow-sm w-32">
-                        @foreach (range(now()->year - 2, now()->year + 2) as $y)
-                            <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
-                                {{ $y }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                {{-- Pemilihan Bulan & Tahun --}}
+                <form action="{{ route('monthly-bills.index') }}" method="GET" class="flex flex-wrap items-end gap-3">
 
-                <button type="submit" class="px-5 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-800">
-                    Tampilkan
-                </button>
-            </form>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Bulan
+                        </label>
+                        <select name="month" class="rounded-lg border-gray-300 shadow-sm w-40">
+                            @foreach (range(1, 12) as $m)
+                                <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
+                                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-            <div class="border-t border-gray-100 mt-5 pt-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Tahun
+                        </label>
+                        <select name="year" class="rounded-lg border-gray-300 shadow-sm w-28">
+                            @foreach (range(now()->year - 2, now()->year + 2) as $y)
+                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
+                                    {{ $y }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <button type="submit" class="px-5 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-800">
+                        Tampilkan
+                    </button>
+                </form>
+
+            </div>
+
+            {{-- Generate Tagihan --}}
+            <div class="border-t border-gray-100 pt-5">
+
                 <form action="{{ route('monthly-bills.generate') }}" method="POST"
                     onsubmit="return confirm('Generate tagihan untuk periode ini? Tagihan yang sudah ada tidak akan dibuat ulang.');"
                     class="flex flex-wrap items-center gap-3">
+
                     @csrf
 
                     <input type="hidden" name="month" value="{{ $month }}">
@@ -75,12 +114,15 @@
 
                     <span class="text-sm text-gray-500">
                         Periode:
-                        {{ \Carbon\Carbon::create()->month($month)->translatedFormat('F') }}
-                        {{ $year }}
+                        {{ $currentPeriod->translatedFormat('F Y') }}
                     </span>
+
                 </form>
+
             </div>
+
         </div>
+
 
         {{-- Ringkasan --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -111,10 +153,53 @@
         {{-- Tabel Tagihan --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 
-            <div class="p-5 border-b border-gray-200">
+            <div class="p-5 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
                 <h3 class="font-semibold text-gray-800">
                     Daftar Tagihan
                 </h3>
+
+                <form id="billSearchForm" action="{{ route('monthly-bills.index') }}" method="GET"
+                    class="flex flex-wrap items-center gap-2">
+
+                    <input type="hidden" name="month" value="{{ $month }}">
+                    <input type="hidden" name="year" value="{{ $year }}">
+
+                    <input type="text" id="billSearchInput" name="search" value="{{ $search }}"
+                        placeholder="Cari nama / username..." autocomplete="off"
+                        class="w-full md:w-64 rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+
+                    <select id="billStatusFilter" name="status"
+                        class="rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+
+                        <option value="" {{ $status === '' ? 'selected' : '' }}>
+                            Semua Status
+                        </option>
+
+                        <option value="UNPAID" {{ $status === 'UNPAID' ? 'selected' : '' }}>
+                            Belum Lunas
+                        </option>
+
+                        <option value="PAID" {{ $status === 'PAID' ? 'selected' : '' }}>
+                            Lunas
+                        </option>
+
+                    </select>
+
+                    <button type="submit"
+                        class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 text-sm font-medium">
+                        Filter
+                    </button>
+
+                    @if ($search !== '' || $status !== '')
+                        <a href="{{ route('monthly-bills.index', ['month' => $month, 'year' => $year]) }}"
+                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium">
+                            Reset
+                        </a>
+                    @endif
+
+                </form>
+
             </div>
 
             <div class="overflow-x-auto">
@@ -148,31 +233,38 @@
 
                     <tbody class="divide-y divide-gray-200">
 
-                        @forelse($bills as $bill)
+                        @forelse ($bills as $bill)
                             <tr class="hover:bg-gray-50">
 
+                                {{-- Pelanggan --}}
                                 <td class="px-5 py-4">
                                     <div class="font-medium text-gray-800">
-                                        {{ $bill->customer->name ?? '-' }}
+                                        {{ $bill->customer?->name ?? '-' }}
                                     </div>
+
                                     <div class="text-xs text-gray-500">
-                                        {{ $bill->customer->user_name ?? '-' }}
+                                        {{ $bill->customer?->user_name ?? '-' }}
                                     </div>
                                 </td>
 
+                                {{-- No. Telepon --}}
                                 <td class="px-5 py-4 text-sm text-gray-600">
-                                    {{ $bill->customer->phone ?? '-' }}
+                                    {{ $bill->customer?->phone ?? '-' }}
                                 </td>
 
+                                {{-- Paket --}}
                                 <td class="px-5 py-4 text-sm text-gray-600">
-                                    {{ $bill->customer->package->name ?? '-' }}
+                                    {{ $bill->customer?->package?->name ?? '-' }}
                                 </td>
 
+                                {{-- Tagihan --}}
                                 <td class="px-5 py-4 text-right font-semibold text-gray-800 whitespace-nowrap">
                                     Rp {{ number_format((float) $bill->amount, 0, ',', '.') }}
                                 </td>
 
+                                {{-- Status --}}
                                 <td class="px-5 py-4 text-center">
+
                                     @if ($bill->status === 'PAID')
                                         <span
                                             class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
@@ -184,31 +276,47 @@
                                             BELUM LUNAS
                                         </span>
                                     @endif
+
                                 </td>
 
+                                {{-- Tanggal Bayar --}}
                                 <td class="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
                                     {{ $bill->paid_at ? $bill->paid_at->format('d/m/Y H:i') : '-' }}
                                 </td>
+
+                                {{-- Aksi --}}
                                 <td class="px-5 py-4 text-center">
+
                                     <form action="{{ route('monthly-bills.pay', $bill->id) }}" method="POST">
+
                                         @csrf
 
-                                        <button type="submit"
-                                            class="inline-block px-3 py-2 rounded-lg text-white text-sm font-semibold
-            {{ $bill->status === 'PAID' ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700' }}">
+                                        @if ($bill->status === 'PAID')
+                                            <button type="submit"
+                                                class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold">
+                                                LUNAS
+                                            </button>
+                                        @else
+                                            <button type="submit"
+                                                class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-semibold">
+                                                Bayar
+                                            </button>
+                                        @endif
 
-                                            {{ $bill->status === 'PAID' ? 'LUNAS' : 'Bayar' }}
-
-                                        </button>
                                     </form>
+
                                 </td>
+
                             </tr>
+
                         @empty
+
                             <tr>
-                                <td colspan="6" class="px-5 py-12 text-center text-gray-500">
+                                <td colspan="7" class="px-5 py-12 text-center text-gray-500">
                                     Belum ada tagihan pada periode ini.
-                                    <br>
-                                    Gunakan tombol Generate Tagihan untuk membuat tagihan.
+                                    <p class="mt-1 text-sm">
+                                        Gunakan tombol Generate Tagihan untuk membuat tagihan.
+                                    </p>
                                 </td>
                             </tr>
                         @endforelse
@@ -225,3 +333,21 @@
 
     </div>
 @endsection
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('billSearchInput');
+        const searchForm = document.getElementById('billSearchForm');
+
+        let timer = null;
+
+        if (searchInput && searchForm) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timer);
+
+                timer = setTimeout(function() {
+                    searchForm.submit();
+                }, 400);
+            });
+        }
+    });
+</script>
