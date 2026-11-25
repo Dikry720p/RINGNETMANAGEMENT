@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PackageImportController;
 use App\Http\Controllers\CustomerImportController;
 use App\Http\Controllers\MonthlyBillController;
+use App\Http\Controllers\PaymentController;
 
 Route::middleware('auth')->group(function () {
     Route::resource('customers', CustomerController::class)
@@ -36,6 +37,13 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/monthly-bills/generate', [MonthlyBillController::class, 'generate'])
         ->name('monthly-bills.generate');
+    Route::get('/customers/{customer}/payments/create', [PaymentController::class, 'create'])
+        ->name('payments.create');
+
+    Route::post('/customers/{customer}/payments', [PaymentController::class, 'store'])
+        ->name('payments.store');
+    Route::post('/monthly-bills/{monthlyBill}/pay', [PaymentController::class, 'payBill'])
+        ->name('monthly-bills.pay');
 });
 
 require __DIR__ . '/auth.php';

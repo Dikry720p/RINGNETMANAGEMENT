@@ -140,6 +140,9 @@
                             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                 Tanggal Bayar
                             </th>
+                            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
+                                Aksi
+                            </th>
                         </tr>
                     </thead>
 
@@ -186,7 +189,19 @@
                                 <td class="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
                                     {{ $bill->paid_at ? $bill->paid_at->format('d/m/Y H:i') : '-' }}
                                 </td>
+                                <td class="px-5 py-4 text-center">
+                                    <form action="{{ route('monthly-bills.pay', $bill->id) }}" method="POST">
+                                        @csrf
 
+                                        <button type="submit"
+                                            class="inline-block px-3 py-2 rounded-lg text-white text-sm font-semibold
+            {{ $bill->status === 'PAID' ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700' }}">
+
+                                            {{ $bill->status === 'PAID' ? 'LUNAS' : 'Bayar' }}
+
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         @empty
                             <tr>
