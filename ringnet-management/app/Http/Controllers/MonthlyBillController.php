@@ -30,8 +30,6 @@ class MonthlyBillController extends Controller
         }
 
         $bills = MonthlyBill::with('customer')
-            ->where('billing_month', $month)
-            ->where('billing_year', $year)
             ->when($search !== '', function ($query) use ($search) {
                 $query->whereHas('customer', function ($customerQuery) use ($search) {
                     $customerQuery->where('name', 'like', "%{$search}%")
@@ -41,8 +39,9 @@ class MonthlyBillController extends Controller
             ->when($status !== '', function ($query) use ($status) {
                 $query->where('status', $status);
             })
-            ->orderBy('status')
-            ->orderBy('id', 'desc')
+            ->orderByDesc('billing_year')
+            ->orderByDesc('billing_month')
+            ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
 
@@ -60,6 +59,15 @@ class MonthlyBillController extends Controller
             ->where('status', 'PAID')
             ->sum('amount');
 
+        if ($request->ajax()) {
+            return view('monthly-bills._ajax-results', compact(
+                'bills',
+                'month',
+                'year',
+                'search',
+                'status'
+            ));
+        }
         return view('monthly-bills.index', compact(
             'bills',
             'month',
@@ -72,6 +80,7 @@ class MonthlyBillController extends Controller
         ));
     }
 
+
     public function generate(Request $request)
     {
         $request->validate([
@@ -82,17 +91,19 @@ class MonthlyBillController extends Controller
         $month = (int) $request->month;
         $year = (int) $request->year;
 
-        $periodEnd = Carbon::create($year, $month, 1)->endOfMonth()->toDateString();
+        $periodStart = Carbon::create($year, $month, 1)->startOfMonth();
 
+        // Pelanggan yang sudah aktivasi sebelum periode tagihan
+        // dan masih berstatus aktif
         $customers = Customer::where('customer_status', 'AKTIF')
             ->whereNotNull('activation_date')
-            ->whereDate('activation_date', '<=', $periodEnd)
+            ->whereDate('activation_date', '<', $periodStart->toDateString())
             ->get();
 
         $created = 0;
 
         foreach ($customers as $customer) {
-            $bill = MonthlyBill::firstOrCreate(
+            $bill = MonthlyBill::updateOrCreate(
                 [
                     'customer_id' => $customer->id,
                     'billing_year' => $year,
@@ -100,7 +111,6 @@ class MonthlyBillController extends Controller
                 ],
                 [
                     'amount' => $customer->billing_amount,
-                    'status' => 'UNPAID',
                 ]
             );
 
@@ -114,6 +124,9 @@ class MonthlyBillController extends Controller
                 'month' => $month,
                 'year' => $year,
             ])
-            ->with('success', "Generate tagihan berhasil. {$created} tagihan baru dibuat.");
+            ->with(
+                'success',
+                "Generate tagihan berhasil. {$created} tagihan baru dibuat untuk periode {$periodStart->format('m/Y')}."
+            );
     }
 }

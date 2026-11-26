@@ -25,8 +25,6 @@
         @endif
 
         {{-- Filter Periode & Generate --}}
-
-        {{-- Filter Periode & Generate --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 
             <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
@@ -113,8 +111,7 @@
                     </button>
 
                     <span class="text-sm text-gray-500">
-                        Periode:
-                        {{ $currentPeriod->translatedFormat('F Y') }}
+                        Periode: {{ $currentPeriod->translatedFormat('F Y') }}
                     </span>
 
                 </form>
@@ -122,7 +119,6 @@
             </div>
 
         </div>
-
 
         {{-- Ringkasan --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -202,152 +198,92 @@
 
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                Pelanggan
-                            </th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                No. Telepon
-                            </th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                Paket
-                            </th>
-                            <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
-                                Tagihan
-                            </th>
-                            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
-                                Status
-                            </th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                Tanggal Bayar
-                            </th>
-                            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
-                                Aksi
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-gray-200">
-
-                        @forelse ($bills as $bill)
-                            <tr class="hover:bg-gray-50">
-
-                                {{-- Pelanggan --}}
-                                <td class="px-5 py-4">
-                                    <div class="font-medium text-gray-800">
-                                        {{ $bill->customer?->name ?? '-' }}
-                                    </div>
-
-                                    <div class="text-xs text-gray-500">
-                                        {{ $bill->customer?->user_name ?? '-' }}
-                                    </div>
-                                </td>
-
-                                {{-- No. Telepon --}}
-                                <td class="px-5 py-4 text-sm text-gray-600">
-                                    {{ $bill->customer?->phone ?? '-' }}
-                                </td>
-
-                                {{-- Paket --}}
-                                <td class="px-5 py-4 text-sm text-gray-600">
-                                    {{ $bill->customer?->package?->name ?? '-' }}
-                                </td>
-
-                                {{-- Tagihan --}}
-                                <td class="px-5 py-4 text-right font-semibold text-gray-800 whitespace-nowrap">
-                                    Rp {{ number_format((float) $bill->amount, 0, ',', '.') }}
-                                </td>
-
-                                {{-- Status --}}
-                                <td class="px-5 py-4 text-center">
-
-                                    @if ($bill->status === 'PAID')
-                                        <span
-                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                                            LUNAS
-                                        </span>
-                                    @else
-                                        <span
-                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
-                                            BELUM LUNAS
-                                        </span>
-                                    @endif
-
-                                </td>
-
-                                {{-- Tanggal Bayar --}}
-                                <td class="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                    {{ $bill->paid_at ? $bill->paid_at->format('d/m/Y H:i') : '-' }}
-                                </td>
-
-                                {{-- Aksi --}}
-                                <td class="px-5 py-4 text-center">
-
-                                    <form action="{{ route('monthly-bills.pay', $bill->id) }}" method="POST">
-
-                                        @csrf
-
-                                        @if ($bill->status === 'PAID')
-                                            <button type="submit"
-                                                class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold">
-                                                LUNAS
-                                            </button>
-                                        @else
-                                            <button type="submit"
-                                                class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-semibold">
-                                                Bayar
-                                            </button>
-                                        @endif
-
-                                    </form>
-
-                                </td>
-
-                            </tr>
-
-                        @empty
-
-                            <tr>
-                                <td colspan="7" class="px-5 py-12 text-center text-gray-500">
-                                    Belum ada tagihan pada periode ini.
-                                    <p class="mt-1 text-sm">
-                                        Gunakan tombol Generate Tagihan untuk membuat tagihan.
-                                    </p>
-                                </td>
-                            </tr>
-                        @endforelse
-
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="p-5">
-                {{ $bills->links() }}
+            {{-- AJAX Results --}}
+            <div id="billResults">
+                @include('monthly-bills._ajax-results')
             </div>
 
         </div>
 
     </div>
-@endsection
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('billSearchInput');
-        const searchForm = document.getElementById('billSearchForm');
 
-        let timer = null;
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('billSearchForm');
+            const input = document.getElementById('billSearchInput');
+            const status = document.getElementById('billStatusFilter');
+            const results = document.getElementById('billResults');
 
-        if (searchInput && searchForm) {
-            searchInput.addEventListener('input', function() {
+            if (!form || !input || !status || !results) return;
+
+            let timer = null;
+            let controller = null;
+
+            function loadResults(url) {
+                if (controller) controller.abort();
+
+                controller = new AbortController();
+                results.style.opacity = '0.5';
+
+                fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/html'
+                        },
+                        signal: controller.signal
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Gagal memuat data');
+                        return response.text();
+                    })
+                    .then(html => {
+                        results.innerHTML = html;
+                        results.style.opacity = '1';
+                    })
+                    .catch(error => {
+                        if (error.name !== 'AbortError') {
+                            results.style.opacity = '1';
+                            console.error(error);
+                        }
+                    });
+            }
+
+            function getSearchUrl() {
+                const params = new URLSearchParams(new FormData(form));
+                return form.action + '?' + params.toString();
+            }
+
+            // Live search
+            input.addEventListener('input', function() {
                 clearTimeout(timer);
 
                 timer = setTimeout(function() {
-                    searchForm.submit();
+                    loadResults(getSearchUrl());
                 }, 400);
             });
-        }
-    });
-</script>
+
+            // Filter status langsung
+            status.addEventListener('change', function() {
+                clearTimeout(timer);
+                loadResults(getSearchUrl());
+            });
+
+            // Tombol Filter tetap berfungsi
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                clearTimeout(timer);
+                loadResults(getSearchUrl());
+            });
+
+            // Pagination AJAX
+            results.addEventListener('click', function(e) {
+                const link = e.target.closest('.pagination a');
+
+                if (!link) return;
+
+                e.preventDefault();
+                loadResults(link.href);
+            });
+        });
+    </script>
+@endsection
