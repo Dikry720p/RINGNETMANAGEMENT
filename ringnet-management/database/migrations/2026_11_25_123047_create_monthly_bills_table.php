@@ -8,22 +8,27 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('monthly_bill_payment', function (Blueprint $table) {
+        Schema::create('monthly_bills', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('payment_id')
-                ->constrained('payments');
+            $table->foreignId('customer_id')
+                ->constrained('customers')
+                ->cascadeOnDelete();
 
-            $table->foreignId('monthly_bill_id')
-                ->constrained('monthly_bills')
-                ->unique();
+            $table->unsignedInteger('billing_month');
+            $table->unsignedInteger('billing_year');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->string('status', 20)->default('UNPAID');
+            $table->dateTime('paid_at')->nullable();
 
             $table->timestamps();
+
+            $table->unique(['customer_id', 'billing_year', 'billing_month'], 'monthly_bills_customer_period_unique');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('monthly_bill_payment');
+        Schema::dropIfExists('monthly_bills');
     }
 };

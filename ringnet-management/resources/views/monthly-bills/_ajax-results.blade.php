@@ -3,8 +3,9 @@
         <thead class="bg-gray-50">
             <tr>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Pelanggan</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">No. Telepon</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Alamat</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Paket</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Periode</th>
                 <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Tagihan</th>
                 <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Tanggal Bayar</th>
@@ -25,11 +26,15 @@
                     </td>
 
                     <td class="px-5 py-4 text-sm text-gray-600">
-                        {{ $bill->customer?->phone ?? '-' }}
+                        {{ $bill->customer?->address ?? '-' }}
                     </td>
 
                     <td class="px-5 py-4 text-sm text-gray-600">
                         {{ $bill->customer?->package?->name ?? '-' }}
+                    </td>
+
+                    <td class="px-5 py-4 text-sm text-gray-600">
+                        {{ \Carbon\Carbon::createFromDate($bill->billing_year, $bill->billing_month, 1)->translatedFormat('F Y') }}
                     </td>
 
                     <td class="px-5 py-4 text-right font-semibold text-gray-800 whitespace-nowrap">
@@ -71,7 +76,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="px-5 py-12 text-center text-gray-500">
+                    <td colspan="8" class="px-5 py-12 text-center text-gray-500">
                         Belum ada tagihan pada periode ini.
                     </td>
                 </tr>

@@ -95,7 +95,9 @@
 
             {{-- Generate Tagihan --}}
             <div class="border-t border-gray-100 pt-5">
-
+                <span class="text-sm text-gray-500">
+                    Periode: {{ $currentPeriod->translatedFormat('F Y') }} (pelanggan baru masuk mulai periode berikutnya)
+                </span>
                 <form action="{{ route('monthly-bills.generate') }}" method="POST"
                     onsubmit="return confirm('Generate tagihan untuk periode ini? Tagihan yang sudah ada tidak akan dibuat ulang.');"
                     class="flex flex-wrap items-center gap-3">
@@ -121,26 +123,40 @@
         </div>
 
         {{-- Ringkasan --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
 
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <p class="text-sm text-gray-500">Total Tagihan</p>
+                <p class="text-sm text-gray-500">Total Tagihan Periode</p>
                 <h3 class="text-2xl font-bold text-gray-800 mt-2">
-                    {{ number_format($totalBills, 0, ',', '.') }}
+                    {{ number_format($totalBills, 0, ',', '.') }} tagihan
                 </h3>
             </div>
 
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <p class="text-sm text-gray-500">Belum Dibayar</p>
+                <p class="text-sm text-gray-500">Belum Dibayar Periode</p>
                 <h3 class="text-2xl font-bold text-orange-600 mt-2">
                     Rp {{ number_format($totalUnpaid, 0, ',', '.') }}
                 </h3>
             </div>
 
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <p class="text-sm text-gray-500">Sudah Dibayar</p>
+                <p class="text-sm text-gray-500">Tagihan Lunas Periode</p>
                 <h3 class="text-2xl font-bold text-green-600 mt-2">
                     Rp {{ number_format($totalPaid, 0, ',', '.') }}
+                </h3>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                <p class="text-sm text-gray-500">Pembayaran Diterima Bulan Ini</p>
+                <h3 class="text-2xl font-bold text-indigo-600 mt-2">
+                    Rp {{ number_format($paymentsReceived, 0, ',', '.') }}
+                </h3>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                <p class="text-sm text-gray-500">Total Tunggakan</p>
+                <h3 class="text-2xl font-bold text-red-600 mt-2">
+                    Rp {{ number_format($totalArrears, 0, ',', '.') }}
                 </h3>
             </div>
 

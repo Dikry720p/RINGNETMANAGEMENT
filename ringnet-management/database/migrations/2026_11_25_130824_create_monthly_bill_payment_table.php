@@ -8,22 +8,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('monthly_bill_payment', function (Blueprint $table) {
-            $table->id();
+        if (!Schema::hasTable('monthly_bill_payment')) {
+            Schema::create('monthly_bill_payment', function (Blueprint $table) {
+                $table->id();
 
-            $table->foreignId('payment_id')
-                ->constrained('payments');
+                $table->foreignId('payment_id')
+                    ->constrained('payments');
 
-            $table->foreignId('monthly_bill_id')
-                ->constrained('monthly_bills')
-                ->unique();
+                $table->foreignId('monthly_bill_id')
+                    ->constrained('monthly_bills')
+                    ->unique();
 
-            $table->timestamps();
-        });
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('monthly_bill_payment');
+        // The pivot is owned by the earlier migration.
+        // This migration is retained only to avoid breaking existing installations.
     }
 };

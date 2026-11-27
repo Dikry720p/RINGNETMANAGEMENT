@@ -89,39 +89,9 @@ class PaymentController extends Controller
 
             // Jika tagihan sudah LUNAS, batalkan pembayaran
             if ($bill->status === 'PAID') {
-
-                $payment = $bill->payments()
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$payment) {
-                    throw ValidationException::withMessages([
-                        'payment' => 'Transaksi pembayaran tidak ditemukan.',
-                    ]);
-                }
-
-                // Lindungi transaksi yang mencakup beberapa tagihan
-                if ($payment->monthlyBills()->count() > 1) {
-                    throw ValidationException::withMessages([
-                        'payment' => 'Pembayaran ini mencakup beberapa tagihan. Tidak dapat dibatalkan melalui tombol ini.',
-                    ]);
-                }
-
-                // Hapus relasi pembayaran dengan tagihan
-                $payment->monthlyBills()->detach($bill->id);
-
-                // Hapus transaksi pembayaran
-                $payment->delete();
-
-                // Kembalikan status tagihan menjadi belum lunas
-                $bill->update([
-                    'status' => 'UNPAID',
-                    'paid_at' => null,
-                ]);
-
                 return redirect()->back()->with(
                     'success',
-                    'Pembayaran dibatalkan. Tagihan kembali belum lunas.'
+                    'Tagihan ini sudah lunas dan riwayat pembayarannya tetap tersimpan.'
                 );
             }
 
