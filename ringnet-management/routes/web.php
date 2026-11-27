@@ -9,6 +9,7 @@ use App\Http\Controllers\CustomerImportController;
 use App\Http\Controllers\MonthlyBillController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PerluDipanggilController;
+use App\Http\Controllers\BermasalahController;
 
 Route::middleware('auth')->group(function () {
     Route::resource('customers', CustomerController::class)
@@ -47,6 +48,8 @@ Route::middleware('auth')->group(function () {
         ->name('monthly-bills.pay');
     Route::get('/perlu-dipanggil', [PerluDipanggilController::class, 'index'])
         ->name('perlu-dipanggil.index');
+    Route::get('/bermasalah', [BermasalahController::class, 'index'])
+        ->name('bermasalah.index');
 });
 
 require __DIR__ . '/auth.php';

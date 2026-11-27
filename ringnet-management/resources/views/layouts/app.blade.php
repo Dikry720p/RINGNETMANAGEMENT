@@ -88,8 +88,8 @@
                                     class="block px-3 py-2 rounded-lg text-sm {{ request()->routeIs('perlu-dipanggil.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                                     Perlu Dipanggil
                                 </a>
-                                <a href="#"
-                                    class="block px-3 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white">
+                                <a href="{{ route('bermasalah.index') }}"
+                                    class="block px-3 py-2 rounded-lg text-sm {{ request()->routeIs('bermasalah.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                                     Bermasalah
                                 </a>
                                 <a href="#"
