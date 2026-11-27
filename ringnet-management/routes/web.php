@@ -8,6 +8,7 @@ use App\Http\Controllers\PackageImportController;
 use App\Http\Controllers\CustomerImportController;
 use App\Http\Controllers\MonthlyBillController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PerluDipanggilController;
 
 Route::middleware('auth')->group(function () {
     Route::resource('customers', CustomerController::class)
@@ -44,6 +45,8 @@ Route::middleware('auth')->group(function () {
         ->name('payments.store');
     Route::post('/monthly-bills/{monthlyBill}/pay', [PaymentController::class, 'payBill'])
         ->name('monthly-bills.pay');
+    Route::get('/perlu-dipanggil', [PerluDipanggilController::class, 'index'])
+        ->name('perlu-dipanggil.index');
 });
 
 require __DIR__ . '/auth.php';
