@@ -121,42 +121,38 @@
 
         </div>
 
-        {{-- Ringkasan --}}
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {{-- Ringkasan Periode & Tunggakan --}}
+        {{-- Ringkasan Periode (Sejajar Ke Samping) --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <p class="text-sm text-gray-500">Total Tagihan Periode</p>
-                <h3 class="text-2xl font-bold text-gray-800 mt-2">
-                    {{ number_format($totalBills, 0, ',', '.') }} tagihan
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm min-w-0">
+                <p class="text-sm font-medium text-gray-500">Pelanggan Periode Ini</p>
+                <h3 class="text-2xl font-bold text-gray-800 mt-2 truncate">
+                    {{ number_format($totalBills, 0, ',', '.') }}
                 </h3>
+                <p class="text-xs text-gray-400 mt-1">
+                    Periode {{ $currentPeriod->translatedFormat('F Y') }}
+                </p>
             </div>
 
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <p class="text-sm text-gray-500">Belum Dibayar Periode</p>
-                <h3 class="text-2xl font-bold text-orange-600 mt-2">
-                    Rp {{ number_format($totalUnpaid, 0, ',', '.') }}
-                </h3>
-            </div>
-
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <p class="text-sm text-gray-500">Tagihan Lunas Periode</p>
-                <h3 class="text-2xl font-bold text-green-600 mt-2">
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm min-w-0">
+                <p class="text-sm font-medium text-gray-500">Total Sudah Dibayar</p>
+                <h3 class="text-2xl font-bold text-green-600 mt-2 truncate">
                     Rp {{ number_format($totalPaid, 0, ',', '.') }}
                 </h3>
+                <p class="text-xs text-gray-400 mt-1">
+                    Status lunas periode {{ $currentPeriod->translatedFormat('F Y') }}
+                </p>
             </div>
 
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <p class="text-sm text-gray-500">Pembayaran Diterima Bulan Ini</p>
-                <h3 class="text-2xl font-bold text-indigo-600 mt-2">
-                    Rp {{ number_format($paymentsReceived, 0, ',', '.') }}
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm min-w-0">
+                <p class="text-sm font-medium text-gray-500">Total Belum Dibayar</p>
+                <h3 class="text-2xl font-bold text-orange-600 mt-2 truncate">
+                    Rp {{ number_format($totalUnpaid, 0, ',', '.') }}
                 </h3>
-            </div>
-
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <p class="text-sm text-gray-500">Total Tunggakan</p>
-                <h3 class="text-2xl font-bold text-red-600 mt-2">
-                    Rp {{ number_format($totalArrears, 0, ',', '.') }}
-                </h3>
+                <p class="text-xs text-gray-400 mt-1">
+                    Tagihan aktif belum lunas periode ini
+                </p>
             </div>
 
         </div>
