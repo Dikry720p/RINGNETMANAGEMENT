@@ -24,7 +24,7 @@ class MonthlyBillController extends Controller
         }
 
         $search = trim((string) $request->input('search', ''));
-        $status = (string) $request->input('status', '');
+        $status = strtoupper(trim((string) $request->input('status', '')));
 
         if (!in_array($status, ['', 'UNPAID', 'PAID'], true)) {
             $status = '';
@@ -42,22 +42,22 @@ class MonthlyBillController extends Controller
             ->with(['customer.package'])
             ->search($search)
             ->when($status !== '', function ($query) use ($status) {
-                $query->where('status', $status);
+                $query->whereRaw('UPPER(TRIM(status)) = ?', [$status]);
             })
             ->orderBy('id')
             ->paginate(100)
             ->withQueryString();
 
         $totalBills = (clone $basePeriodQuery)->count();
-        $totalUnpaid = (clone $basePeriodQuery)->where('status', 'UNPAID')->sum('amount');
-        $totalPaid = (clone $basePeriodQuery)->where('status', 'PAID')->sum('amount');
+        $totalUnpaid = (clone $basePeriodQuery)->whereRaw('UPPER(TRIM(status)) = ?', ['UNPAID'])->sum('amount');
+        $totalPaid = (clone $basePeriodQuery)->whereRaw('UPPER(TRIM(status)) = ?', ['PAID'])->sum('amount');
 
         $paymentsReceived = Payment::whereBetween('paid_at', [
             $periodStart->copy()->startOfDay(),
             $periodEnd->copy()->endOfDay(),
         ])->sum('total_amount');
 
-        $totalArrears = MonthlyBill::where('status', 'UNPAID')
+        $totalArrears = MonthlyBill::whereRaw('UPPER(TRIM(status)) = ?', ['UNPAID'])
             ->whereHas('customer', function ($customerQuery) use ($periodEnd) {
                 $customerQuery->whereRaw('UPPER(TRIM(customer_status)) = ?', ['AKTIF'])
                     ->where(function ($eligibilityQuery) use ($periodEnd) {
@@ -111,7 +111,7 @@ class MonthlyBillController extends Controller
         $periodStart = Carbon::create($year, $month, 1)->startOfMonth();
 
         // Hanya pelanggan AKTIF yang tanggal mulainya jatuh sebelum awal periode
-        // (artinya pelanggan baru di bulan ini baru masuk ke periode berikutnya).
+        // (pelanggan baru di bulan ini baru masuk mulai periode berikutnya).
         $customers = Customer::with('package')
             ->where(function ($customerQuery) use ($periodStart) {
                 $this->applyCustomerEligibilityScope($customerQuery, $periodStart);
@@ -184,7 +184,6 @@ class MonthlyBillController extends Controller
     {
         $query->whereRaw('UPPER(TRIM(customer_status)) = ?', ['AKTIF'])
             ->where(function ($eligibilityQuery) use ($periodStart) {
-                // Jika activation_date terisi: awal bulan berikutnya setelah activation_date <= periodStart
                 $eligibilityQuery->where(function ($q) use ($periodStart) {
                     $q->whereNotNull('activation_date')
                         ->whereRaw(
@@ -192,7 +191,6 @@ class MonthlyBillController extends Controller
                             [$periodStart->toDateString()]
                         );
                 })
-                    // Jika activation_date kosong: gunakan created_at (awal bulan berikutnya <= periodStart)
                     ->orWhere(function ($q) use ($periodStart) {
                         $q->whereNull('activation_date')
                             ->whereRaw(

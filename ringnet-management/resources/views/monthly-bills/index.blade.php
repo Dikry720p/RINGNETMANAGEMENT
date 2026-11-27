@@ -202,12 +202,10 @@
                         Filter
                     </button>
 
-                    @if ($search !== '' || $status !== '')
-                        <a href="{{ route('monthly-bills.index', ['month' => $month, 'year' => $year]) }}"
-                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium">
-                            Reset
-                        </a>
-                    @endif
+                    <a id="billResetButton" href="{{ route('monthly-bills.index', ['month' => $month, 'year' => $year]) }}"
+                        class="{{ $search !== '' || $status !== '' ? 'inline-flex' : 'hidden' }} px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium">
+                        Reset
+                    </a>
 
                 </form>
 
@@ -227,17 +225,35 @@
             const form = document.getElementById('billSearchForm');
             const input = document.getElementById('billSearchInput');
             const status = document.getElementById('billStatusFilter');
+            const resetBtn = document.getElementById('billResetButton');
             const results = document.getElementById('billResults');
 
             if (!form || !input || !status || !results) return;
 
             let controller = null;
 
+            function toggleResetButton() {
+                if (!resetBtn) return;
+
+                const hasFilter = input.value.trim() !== '' || status.value !== '';
+                resetBtn.classList.toggle('hidden', !hasFilter);
+                resetBtn.classList.toggle('inline-flex', hasFilter);
+            }
+
+            function getSearchUrl() {
+                const params = new URLSearchParams(new FormData(form));
+                return form.action + '?' + params.toString();
+            }
+
             function loadResults(url) {
                 if (controller) controller.abort();
 
                 controller = new AbortController();
                 results.style.opacity = '0.5';
+
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, '', url);
+                }
 
                 fetch(url, {
                         headers: {
@@ -262,24 +278,22 @@
                     });
             }
 
-            function getSearchUrl() {
-                const params = new URLSearchParams(new FormData(form));
-                return form.action + '?' + params.toString();
-            }
-
             // Pencarian langsung setiap huruf diketik tanpa delay
             input.addEventListener('input', function() {
+                toggleResetButton();
                 loadResults(getSearchUrl());
             });
 
             // Filter status langsung
             status.addEventListener('change', function() {
+                toggleResetButton();
                 loadResults(getSearchUrl());
             });
 
             // Tombol Filter / Enter tetap berfungsi
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
+                toggleResetButton();
                 loadResults(getSearchUrl());
             });
 
