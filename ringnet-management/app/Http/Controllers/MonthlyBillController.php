@@ -33,26 +33,14 @@ class MonthlyBillController extends Controller
         $periodStart = Carbon::create($year, $month, 1)->startOfMonth();
         $periodEnd = $periodStart->copy()->endOfMonth();
 
-        $escapedSearch = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
-
-        $basePeriodQuery = MonthlyBill::query()
-            ->where('billing_month', $month)
-            ->where('billing_year', $year)
+        $basePeriodQuery = MonthlyBill::forPeriod($year, $month)
             ->whereHas('customer', function ($customerQuery) use ($periodStart) {
                 $this->applyCustomerEligibilityScope($customerQuery, $periodStart);
             });
 
         $bills = (clone $basePeriodQuery)
             ->with(['customer.package'])
-            ->when($escapedSearch !== '', function ($query) use ($escapedSearch) {
-                $query->whereHas('customer', function ($customerQuery) use ($escapedSearch) {
-                    $customerQuery->where(function ($subQuery) use ($escapedSearch) {
-                        $subQuery->where('name', 'like', "%{$escapedSearch}%")
-                            ->orWhere('user_name', 'like', "%{$escapedSearch}%")
-                            ->orWhere('address', 'like', "%{$escapedSearch}%");
-                    });
-                });
-            })
+            ->search($search)
             ->when($status !== '', function ($query) use ($status) {
                 $query->where('status', $status);
             })
@@ -142,8 +130,7 @@ class MonthlyBillController extends Controller
                 );
         }
 
-        $existingCustomerIds = MonthlyBill::where('billing_year', $year)
-            ->where('billing_month', $month)
+        $existingCustomerIds = MonthlyBill::forPeriod($year, $month)
             ->whereIn('customer_id', $customers->pluck('id'))
             ->pluck('customer_id')
             ->flip();

@@ -95,9 +95,7 @@
 
             {{-- Generate Tagihan --}}
             <div class="border-t border-gray-100 pt-5">
-                <span class="text-sm text-gray-500">
-                    Periode: {{ $currentPeriod->translatedFormat('F Y') }} (pelanggan baru masuk mulai periode berikutnya)
-                </span>
+
                 <form action="{{ route('monthly-bills.generate') }}" method="POST"
                     onsubmit="return confirm('Generate tagihan untuk periode ini? Tagihan yang sudah ada tidak akan dibuat ulang.');"
                     class="flex flex-wrap items-center gap-3">
@@ -113,7 +111,8 @@
                     </button>
 
                     <span class="text-sm text-gray-500">
-                        Periode: {{ $currentPeriod->translatedFormat('F Y') }}
+                        Periode: {{ $currentPeriod->translatedFormat('F Y') }} (pelanggan baru masuk mulai periode
+                        berikutnya)
                     </span>
 
                 </form>
@@ -178,8 +177,8 @@
                     <input type="hidden" name="year" value="{{ $year }}">
 
                     <input type="text" id="billSearchInput" name="search" value="{{ $search }}"
-                        placeholder="Cari nama / username..." autocomplete="off"
-                        class="w-full md:w-64 rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        placeholder="Cari nama, no. tlp, username, paket..." autocomplete="off"
+                        class="w-full md:w-72 rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
 
                     <select id="billStatusFilter" name="status"
                         class="rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
@@ -214,7 +213,7 @@
 
             </div>
 
-            {{-- AJAX Results --}}
+            {{-- Hasil Pencarian / Tabel --}}
             <div id="billResults">
                 @include('monthly-bills._ajax-results')
             </div>
@@ -232,7 +231,6 @@
 
             if (!form || !input || !status || !results) return;
 
-            let timer = null;
             let controller = null;
 
             function loadResults(url) {
@@ -269,32 +267,25 @@
                 return form.action + '?' + params.toString();
             }
 
-            // Live search
+            // Pencarian langsung setiap huruf diketik tanpa delay
             input.addEventListener('input', function() {
-                clearTimeout(timer);
-
-                timer = setTimeout(function() {
-                    loadResults(getSearchUrl());
-                }, 400);
+                loadResults(getSearchUrl());
             });
 
             // Filter status langsung
             status.addEventListener('change', function() {
-                clearTimeout(timer);
                 loadResults(getSearchUrl());
             });
 
-            // Tombol Filter tetap berfungsi
+            // Tombol Filter / Enter tetap berfungsi
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                clearTimeout(timer);
                 loadResults(getSearchUrl());
             });
 
-            // Pagination AJAX
+            // Pagination
             results.addEventListener('click', function(e) {
                 const link = e.target.closest('.pagination a');
-
                 if (!link) return;
 
                 e.preventDefault();
